@@ -156,6 +156,7 @@ error_code Listener::ConfigureServerSocket(int fd) {
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)) < 0) {
     LOG(WARNING) << "Could not set reuse addr on socket " << detail::SafeErrorMessage(errno);
   }
+  // 关于keepalive相关
   bool success = ConfigureKeepAlive(fd, kInterval);
 
   if (!success) {
@@ -165,6 +166,7 @@ error_code Listener::ConfigureServerSocket(int fd) {
     socklen_t length = sizeof(socket_type);
 
     // Ignore the error on UDS.
+    // 这一段没太看懂
     if (getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &socket_type, &length) != 0 ||
         socket_type != AF_UNIX) {
       LOG(WARNING) << "Could not configure keep alive " << detail::SafeErrorMessage(myerr);
@@ -183,6 +185,7 @@ void Listener::PostShutdown() {
 // We can limit number of threads handling dragonfly connections.
 ProactorBase* Listener::PickConnectionProactor(LinuxSocketBase* sock) {
   util::ProactorPool* pp = pool();
+  // 也许这个地方可以抽象出来，因为每次连接来了都会跑这些东西
   uint32_t total = GetFlag(FLAGS_conn_threads);
   uint32_t id = kuint32max;
 
@@ -201,6 +204,7 @@ ProactorBase* Listener::PickConnectionProactor(LinuxSocketBase* sock) {
     VLOG(1) << "CPU/NAPI for connection " << fd << " is " << cpu << "/" << napi_id;
 
     vector<unsigned> ids = pool()->MapCpuToThreads(cpu);
+    // 这里后续可以修改为把连接扔到连接数较少的线程上去
     if (!ids.empty()) {
       id = ids.front();
     }

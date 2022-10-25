@@ -25,6 +25,11 @@ class Journal;
 // but not engine shards and there can be threads that handle both.
 // Instances of ServerState are present only for threads that handle
 // IO and manage incoming connections.
+
+// 存在于每个服务器线程中。这个类与EngineShard不同。
+// 后者管理围绕引擎碎片的状态，而前者代表协调者/连接状态。
+// 可能有线程处理引擎碎片但不处理IO，可能有线程处理IO但不处理引擎碎片，也可能有线程两者都处理。
+// ServerState的实例只存在于处理IO和管理传入连接的线程中。
 class ServerState {  // public struct - to allow initialization.
   ServerState(const ServerState&) = delete;
   void operator=(const ServerState&) = delete;

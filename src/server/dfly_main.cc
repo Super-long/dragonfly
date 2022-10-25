@@ -123,6 +123,7 @@ string NormalizePaths(std::string_view path) {
 bool RunEngine(ProactorPool* pool, AcceptServer* acceptor) {
   auto maxmemory = GetFlag(FLAGS_maxmemory);
 
+  // 为什么一定要每线程小于256MB？
   if (maxmemory > 0 && maxmemory < pool->size() * 256_MB) {
     LOG(ERROR) << "Max memory is less than 256MB per thread. Exiting...";
     return false;

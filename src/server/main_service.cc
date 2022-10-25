@@ -13,6 +13,11 @@ extern "C" {
 #include <absl/strings/str_format.h>
 #include <xxhash.h>
 
+#if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+#endif
+
 #include <boost/fiber/operations.hpp>
 #include <filesystem>
 

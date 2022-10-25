@@ -26,6 +26,7 @@ class RedisParser;
 class ServiceInterface;
 class MemcacheParser;
 
+// 不觉得这个很奇怪吗，为什么不是connection_interface
 class Connection : public util::Connection {
  public:
   Connection(Protocol protocol, util::HttpListenerBase* http_listener, SSL_CTX* ctx,

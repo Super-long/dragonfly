@@ -223,6 +223,7 @@ void Connection::HandleRequests() {
 #endif
 
   io::Result<bool> http_res{false};
+  // http这个功能半天不会用，在mac上用redis-cli连接还有bug，写数据直接失败
   if (absl::GetFlag(FLAGS_http_admin_console))
     http_res = CheckForHttpProto(peer);
 
@@ -245,7 +246,7 @@ void Connection::HandleRequests() {
         break_poll_id_ =
             us->PollEvent(POLLERR | POLLHUP, [this](int32_t mask) { this->OnBreakCb(mask); });
       }
-
+      // 接收到数据连接到时候把连接转移到应该处理它的procator上
       ConnectionFlow(peer);
 
       if (break_poll_id_ != kuint32max) {
@@ -528,6 +529,7 @@ void Connection::OnBreakCb(int32_t mask) {
   evc_.notify();  // Notify dispatch fiber.
 }
 
+// 执行io_loop，负责收到一个完整的数据包，并将解析后的结果发送给dispatch_q_
 auto Connection::IoLoop(util::FiberSocketBase* peer) -> variant<error_code, ParserStatus> {
   SinkReplyBuilder* builder = cc_->reply_builder();
   ConnectionStats* stats = service_->GetThreadLocalConnectionStats();
@@ -600,6 +602,7 @@ auto Connection::IoLoop(util::FiberSocketBase* peer) -> variant<error_code, Pars
 // Thus, InputLoop can quickly read data from the input buffer, parse it and push
 // into the dispatch queue and DispatchFiber will run those commands asynchronously with InputLoop.
 // Note: in some cases, InputLoop may decide to dispatch directly and bypass the DispatchFiber.
+// DispatchFiber也有一个好处就是很容易把数据包发送到其他线程去，
 void Connection::DispatchFiber(util::FiberSocketBase* peer) {
   this_fiber::properties<FiberProps>().set_name("DispatchFiber");
 
